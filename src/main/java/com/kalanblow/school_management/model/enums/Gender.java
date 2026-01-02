@@ -1,29 +1,33 @@
 package com.kalanblow.school_management.model.enums;
 
 import java.io.Serializable;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import com.kalanblow.school_management.model.json.GenderDeserializer;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@JsonDeserialize(using = GenderDeserializer.class)
-@NoArgsConstructor
-@AllArgsConstructor
 public enum Gender implements Serializable {
+    MALE("Homme"),
+    FEMALE("Femme");
 
-    MALE("Homme"), FEMALE("Femme");
+    private final String value;
 
-    private String value;
+    Gender(String value) {
+        this.value = value;
+    }
 
-	public String getValue() {
+    @JsonValue
+    public String getValue() {
         return value;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public static Gender fromValue(String value) {
+        for (Gender gender : Gender.values()) {
+            if (gender.getValue().equalsIgnoreCase(value)) {
+                return gender;
+            }
+        }
+        throw new IllegalArgumentException("Invalid Gender value: " + value);
     }
 }

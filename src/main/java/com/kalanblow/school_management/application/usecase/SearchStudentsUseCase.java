@@ -20,10 +20,10 @@ public class SearchStudentsUseCase {
     }
 
     @Cacheable(value = "student-pages", key = "#key.toString()")
-    public Page<Student> execute(StudentPageCacheKey key) {
+    public Page<Student> execute(StudentPageCacheKey key, Pageable pageable, Specification<Student> spec) {
         // Construire la spécification à partir de la clé
-        Specification<Student> spec = buildSpecification(key);
-        Pageable pageable = PageRequest.of(key.page(), key.size());
+        spec = buildSpecification(key);
+        pageable = PageRequest.of(key.page(), key.size());
         return studentService.search(spec, pageable);
     }
 

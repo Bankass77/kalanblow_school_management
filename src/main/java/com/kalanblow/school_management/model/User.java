@@ -2,13 +2,9 @@ package com.kalanblow.school_management.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.kalanblow.school_management.model.enums.Gender;
 import com.kalanblow.school_management.model.enums.MaritalStatus;
 import com.kalanblow.school_management.model.enums.Role;
-import com.kalanblow.school_management.model.json.GenderDeserializer;
-import com.kalanblow.school_management.model.json.MaritalStatusDeserializer;
-import com.kalanblow.school_management.model.json.UserRoleDeserializer;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -35,13 +31,11 @@ public class User implements Serializable {
     private UserName userName = new UserName();
 
     @NotNull(message = "{notnull.message}")
-    @JsonDeserialize(using = GenderDeserializer.class)
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
     @NotNull(message = "{notnull.message}")
     @Enumerated(EnumType.STRING)
-    @JsonDeserialize(using = MaritalStatusDeserializer.class)
     private MaritalStatus maritalStatus;
 
     @CreatedDate
@@ -81,7 +75,6 @@ public class User implements Serializable {
     })
     private Address address;
 
-    @JsonDeserialize(using = UserRoleDeserializer.class)
     @ElementCollection(targetClass = Role.class, fetch = FetchType.LAZY)
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();
@@ -90,4 +83,93 @@ public class User implements Serializable {
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$", message = "Le mot de passe doit être fort.")
     private String password;
 
+    public UserName getUserName() {
+        return userName;
+    }
+
+    public void setUserName(UserName userName) {
+        this.userName = userName;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public MaritalStatus getMaritalStatus() {
+        return maritalStatus;
+    }
+
+    public void setMaritalStatus(MaritalStatus maritalStatus) {
+        this.maritalStatus = maritalStatus;
+    }
+
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public LocalDateTime getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
+
+    @Nullable
+    public PhoneNumber getUser_phoneNumber() {
+        return user_phoneNumber;
+    }
+
+    public void setUser_phoneNumber(@Nullable PhoneNumber user_phoneNumber) {
+        this.user_phoneNumber = user_phoneNumber;
+    }
+
+    @Nullable
+    public byte[] getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(@Nullable byte[] avatar) {
+        this.avatar = avatar;
+    }
+
+    public Email getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(Email userEmail) {
+        this.userEmail = userEmail;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

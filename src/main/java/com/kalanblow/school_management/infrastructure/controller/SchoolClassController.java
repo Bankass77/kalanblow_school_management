@@ -1,12 +1,18 @@
 package com.kalanblow.school_management.infrastructure.controller;
 
+import com.kalanblow.school_management.application.dto.PageResponse;
 import com.kalanblow.school_management.application.dto.SchoolClassRequest;
 import com.kalanblow.school_management.application.dto.SchoolClassResponse;
+import com.kalanblow.school_management.application.mapper.PageMapper;
 import com.kalanblow.school_management.application.mapper.SchoolClassMapper;
 import com.kalanblow.school_management.application.usecase.*;
+import com.kalanblow.school_management.infrastructure.persistence.SchoolClassSpecifications;
 import com.kalanblow.school_management.model.SchoolClass;
-import com.kalanblow.school_management.service.SchoolClassService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +27,16 @@ public class SchoolClassController {
     private final GetSchoolClassUseCase getSchoolClassUseCase;
     private final SearchSchoolClassUseCase searchSchoolClassUseCase;
     private final SchoolClassMapper mapper;
+    private final PageMapper pageMapper;
 
-    public SchoolClassController(CreateSchoolClassUseCase createSchoolClassUseCase, DeleteSchoolClassUseCase deleteSchoolClassUseCase, UpdateSchoolClassUseCase updatedSchoolClass, GetSchoolClassUseCase getSchoolClassUseCase, SearchSchoolClassUseCase searchSchoolClassUseCase, SchoolClassMapper mapper) {
+    public SchoolClassController(CreateSchoolClassUseCase createSchoolClassUseCase, DeleteSchoolClassUseCase deleteSchoolClassUseCase, UpdateSchoolClassUseCase updatedSchoolClass, GetSchoolClassUseCase getSchoolClassUseCase, SearchSchoolClassUseCase searchSchoolClassUseCase, SchoolClassMapper mapper, PageMapper pageMapper) {
         this.createSchoolClassUseCase = createSchoolClassUseCase;
         this.deleteSchoolClassUseCase = deleteSchoolClassUseCase;
         this.updatedSchoolClass = updatedSchoolClass;
         this.getSchoolClassUseCase = getSchoolClassUseCase;
         this.searchSchoolClassUseCase = searchSchoolClassUseCase;
         this.mapper = mapper;
+        this.pageMapper = pageMapper;
     }
 
     @PostMapping
@@ -64,6 +72,28 @@ public class SchoolClassController {
     public ResponseEntity<Void> deleteSchoolClass(@PathVariable Long id) {
         deleteSchoolClassUseCase.execute(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<SchoolClassResponse>> getAllSchoolClasses(@RequestParam(required = false) String name,
+                                                                                 @RequestParam(defaultValue = "0") int page,
+                                                                                 @RequestParam(defaultValue = "10") int size) {
+
+        page = Math.max(page, 0);
+        size = Math.max(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(page, size);
+        Specification<SchoolClass> specification;
+
+        if (name != null) {
+            specification = Specification.where(SchoolClassSpecifications.nameContains(name));
+        } else {
+            specification = Specification.where(((root, query, criteriaBuilder) -> null));
+        }
+
+        SchoolClassePageCacheKey cacheKey = new SchoolClassePageCacheKey(page, size, name);
+
+        Page<SchoolClass> schoolClassPage = searchSchoolClassUseCase.execute(cacheKey, pageable, specification);
+        return ResponseEntity.ok(pageMapper.toPageResponse(schoolClassPage, mapper::toResponse));
     }
 
 }

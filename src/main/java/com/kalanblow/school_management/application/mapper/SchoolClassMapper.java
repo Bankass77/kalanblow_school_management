@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface SchoolClassMapper {
 
-   public SchoolClass toEntity(SchoolClassRequest request);
+    SchoolClass toEntity(SchoolClassRequest request);
+
     SchoolClassResponse toResponse(SchoolClass schoolClass);
 }

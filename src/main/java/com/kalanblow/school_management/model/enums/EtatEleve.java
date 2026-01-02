@@ -1,10 +1,10 @@
 package com.kalanblow.school_management.model.enums;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@JsonFormat(shape = JsonFormat.Shape.STRING)
 public enum EtatEleve {
     NOUVEAU,
     PROMU,
