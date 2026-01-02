@@ -55,10 +55,22 @@ public class StudentController {
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) Long classId,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
         page = Math.max(page, 0);
         size = Math.max(Math.max(size, 1), 50);
         Pageable pageable = PageRequest.of(page, size);
+
+        Specification<Student> spec;
+        if (firstName != null || lastName != null || classId != null) {
+            spec = Specification
+                    .where(StudentSpecifications.firstNameContains(firstName))
+                    .and(StudentSpecifications.lastNameContains(lastName))
+                    .and(StudentSpecifications.classIdEquals(classId));
+        } else {
+            spec = Specification.where((root, query, cb) -> null);
+        }
         StudentPageCacheKey cacheKey =
                 new StudentPageCacheKey(
                         page,
@@ -67,13 +79,8 @@ public class StudentController {
                         lastName,
                         classId
                 );
-        Specification<Student> spec = Specification
-                .where(StudentSpecifications.firstNameContains(firstName))
-                .and(StudentSpecifications.lastNameContains(lastName))
-                .and(StudentSpecifications.classIdEquals(classId));
 
-        Page<Student> students =
-                searchStudentsUseCase.execute(cacheKey, pageable, spec);
+        Page<Student> students = searchStudentsUseCase.execute(cacheKey, pageable, spec);
         return ResponseEntity.ok(pageMapper.toPageResponse(students, mapper::toResponse));
     }
 

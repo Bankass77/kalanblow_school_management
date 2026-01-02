@@ -1,21 +1,18 @@
 package com.kalanblow.school_management.application.usecase;
 
-import com.kalanblow.school_management.repository.StudentRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.kalanblow.school_management.service.StudentService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeleteStudentUseCase {
-    private final StudentRepository repository;
 
-    public DeleteStudentUseCase(StudentRepository repository) {
-        this.repository = repository;
+    private final StudentService studentService;
+
+    public DeleteStudentUseCase(StudentService studentService) {
+        this.studentService = studentService;
     }
 
     public void execute(Long id) {
-        if (!repository.existsByStudentId(id)) {
-            throw new EntityNotFoundException("Student not found with id " + id);
-        }
-        repository.deleteByStudentId(id);
+        studentService.deleteStudentById(id);
     }
 }

@@ -3,6 +3,9 @@ package com.kalanblow.school_management.service;
 import com.kalanblow.school_management.model.SchoolClass;
 import com.kalanblow.school_management.repository.SchoolClassRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,5 +62,9 @@ public class SchoolClassService {
             throw new EntityNotFoundException("School classe not found with " + id);
         }
         schoolClassRepository.deleteSchoolClassById(id);
+    }
+
+    public Page<SchoolClass> search(Specification<SchoolClass> specification, Pageable pageable) {
+        return schoolClassRepository.search(specification,pageable);
     }
 }

@@ -4,12 +4,12 @@ import com.kalanblow.school_management.model.Student;
 import com.kalanblow.school_management.repository.StudentRepository;
 import jakarta.persistence.EntityNotFoundException;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -23,9 +23,11 @@ public class StudentService {
 
     /**
      *
-     * @param student
-     * @return
+     * @param student to be created
+     * @return a new student
      */
+    @CacheEvict(value = "student-pages", allEntries = true)
+    @Transactional
     public Student createNewStudent(Student student) {
 
         return studentRepository.save(student);
@@ -33,44 +35,46 @@ public class StudentService {
 
     /**
      *
-     * @param id
-     * @return
+     * @param id , student id
+     * @return a student othewise thow an EntityNotFoundException
      */
-    @Transactional(readOnly = true)
+    @CacheEvict(value = "student-pages", allEntries = true)
+    @Transactional
     public Student getStudentById(Long id) {
         return studentRepository.findByStudentId(id).orElseThrow(() -> new EntityNotFoundException("Student not found with id " + id));
     }
 
     /**
      *
-     * @return
+     * @param id student's id
+     * @param updated ,student updated
+     * @return a student update
      */
-    @Transactional(readOnly = true)
-    public Page<Student> getAllStudents(Pageable pageable) {
-        return studentRepository.findAll(pageable);
-    }
-
-    /**
-     *
-     * @param id
-     * @param updated
-     * @return
-     */
+    @CacheEvict(value = "student-pages", allEntries = true)
+    @Transactional
     public Student updateStudent(Long id, Student updated) {
         Student existing = studentRepository.findByStudentId(id).orElseThrow(() -> new EntityNotFoundException("Student not found with id " + id));
-        existing.setFirstName(updated.getFirstName());
-        existing.setLastName(updated.getLastName());
+        existing.getUser().getUserName().setFirstName(updated.getUser().getUserName().getFirstName());
+        existing.getUser().getUserName().setLastName(updated.getUser().getUserName().getLastName());
         return studentRepository.save(existing);
     }
 
     /**
      *
-     * @param id
+     * @param id student id to be deleted
      */
+    @CacheEvict(value = "student-pages", allEntries = true)
+    @Transactional
     public void deleteStudentById(Long id) {
         if (!studentRepository.existsByStudentId(id)) {
             throw new EntityNotFoundException("Student not found with id " + id);
         }
         studentRepository.deleteByStudentId(id);
+    }
+
+    public Page<Student> search(Specification<Student> spec, Pageable pageable) {
+        // Si spec est null, on le remplace par une spécification qui ne filtre rien
+        Specification<Student> specification = spec==null? Specification.where((root, query, cb)-> null):spec;
+        return studentRepository.search(specification,pageable);
     }
 }

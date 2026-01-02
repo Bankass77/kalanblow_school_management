@@ -1,60 +1,44 @@
 package com.kalanblow.school_management.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "students")
 @Getter
 @Setter
 public class Student implements Serializable {
-    @Id
+    private static final long serialVersionUID = 1L;
+
+	@Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long studentId;
 
-    @NotBlank
-    private String firstName;
-
-    @NotBlank
-    private String lastName;
+    @Embedded
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private SchoolClass schoolClass;
 
-    // Getters et Setters manuels
-    public long getStudentId() {
-        return studentId;
-    }
+    @Column(name = "ine_number")
+    @NotNull(message = "{notnull.message}")
+    private String ineNumber;
 
-    public void setStudentId(long studentId) {
-        this.studentId = studentId;
-    }
+    @NotNull(message = "{notnull.message}")
+    @Column(name = "birthDate")
+    @Past
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    private LocalDate dateDeNaissance;
 
-    public String getFirstName() {
-        return firstName;
-    }
+    @Column(name = "age")
+    @NotNull(message = "{notnull.message}")
+    private int age;
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public SchoolClass getSchoolClass() {
-        return schoolClass;
-    }
-
-    public void setSchoolClass(SchoolClass schoolClass) {
-        this.schoolClass = schoolClass;
-    }
 }
