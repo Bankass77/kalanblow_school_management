@@ -1,5 +1,8 @@
 package com.kalanblow.school_management.service;
 
+import com.kalanblow.school_management.application.dashboard.StudentCreatedEvent;
+import com.kalanblow.school_management.application.dashboard.StudentDeletedEvent;
+import com.kalanblow.school_management.application.dashboard.StudentUpdatedEvent;
 import com.kalanblow.school_management.infrastructure.web.dto.StudentCreateDTO;
 import com.kalanblow.school_management.model.anneescolaire.AnneeScolaire;
 import com.kalanblow.school_management.model.classe.SchoolClass;
@@ -15,6 +18,7 @@ import com.kalanblow.school_management.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,14 +37,16 @@ public class StudentService {
     private final SchoolClassRepository schoolClassRepository;
     private final ParentRepository parentRepository;
     private final AnneeScolaireRepository anneeScolaireRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public StudentService(StudentRepository studentRepository, EtablissementRepository etablissementRepository, SchoolClassRepository schoolClassRepository, ParentRepository parentRepository, AnneeScolaireRepository anneeScolaireRepository) {
+    public StudentService(StudentRepository studentRepository, EtablissementRepository etablissementRepository, SchoolClassRepository schoolClassRepository, ParentRepository parentRepository, AnneeScolaireRepository anneeScolaireRepository, ApplicationEventPublisher eventPublisher) {
         this.studentRepository = studentRepository;
 
         this.etablissementRepository = etablissementRepository;
         this.schoolClassRepository = schoolClassRepository;
         this.parentRepository = parentRepository;
         this.anneeScolaireRepository = anneeScolaireRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -52,12 +58,12 @@ public class StudentService {
     @Transactional
     public Student createNewStudent(StudentCreateDTO studentCreateDTO) {
 
-        Etablissement etablissement= etablissementRepository.findById(studentCreateDTO.getEtablissementId()).orElseThrow(()-> new EntityNotFoundException("L'établissement n'a pas été trouvé avec cet id "+studentCreateDTO.getEtablissementId()) );
-        SchoolClass schoolClass =null;
-        if (studentCreateDTO.getSchoolClassId() !=null){
-            schoolClass= schoolClassRepository.findSchoolClassById(studentCreateDTO.getSchoolClassId()).orElseThrow(()->new EntityNotFoundException("la classe n'a pa été trouvée avec cet id "+ studentCreateDTO.getSchoolClassId()));
+        Etablissement etablissement = etablissementRepository.findById(studentCreateDTO.getEtablissementId()).orElseThrow(() -> new EntityNotFoundException("L'établissement n'a pas été trouvé avec cet id " + studentCreateDTO.getEtablissementId()));
+        SchoolClass schoolClass = null;
+        if (studentCreateDTO.getSchoolClassId() != null) {
+            schoolClass = schoolClassRepository.findSchoolClassById(studentCreateDTO.getSchoolClassId()).orElseThrow(() -> new EntityNotFoundException("la classe n'a pa été trouvée avec cet id " + studentCreateDTO.getSchoolClassId()));
         }
-        Set<Parent> parents= new HashSet<>();
+        Set<Parent> parents = new HashSet<>();
         if (studentCreateDTO.getParentIds() != null) {
             parents = parentRepository.findAllById(studentCreateDTO.getParentIds());
 
@@ -80,6 +86,13 @@ public class StudentService {
         student.setParents(parents);
         student.setEtat(studentCreateDTO.getEtat());
         student.setHistoriqueScolaires(historique);
+        // Émettre l'événement
+        eventPublisher.publishEvent(new StudentCreatedEvent(
+                student.getStudentId(),
+                student.getUser().getUserName().getFullName(),
+                student.getSchoolClass() != null ? student.getSchoolClass().getSchoolClassId() : null,
+                student.getSchoolClass() != null ? student.getSchoolClass().getName() : "Non assigné"
+        ));
         return studentRepository.save(student);
     }
 
@@ -103,10 +116,28 @@ public class StudentService {
     @CacheEvict(value = "student-pages", allEntries = true)
     @Transactional
     public Student updateStudent(Long id, Student updated) {
-        Student existing = studentRepository.findByStudentId(id).orElseThrow(() -> new EntityNotFoundException("Student not found with id " + id));
-        existing.getUser().getUserName().setFirstName(updated.getUser().getUserName().getFirstName());
-        existing.getUser().getUserName().setLastName(updated.getUser().getUserName().getLastName());
-        return studentRepository.save(existing);
+        Student existingStudent = studentRepository.findByStudentId(id).orElseThrow(() -> new EntityNotFoundException("Student not found with id " + id));
+        existingStudent.getUser().getUserName().setFirstName(updated.getUser().getUserName().getFirstName());
+        existingStudent.getUser().getUserName().setLastName(updated.getUser().getUserName().getLastName());
+
+        Student savedStudent = studentRepository.save(existingStudent);
+
+
+        Long newClassId = savedStudent.getSchoolClass() != null ?
+                savedStudent.getSchoolClass().getSchoolClassId() : null;
+
+        Long oldClassId = existingStudent.getSchoolClass() != null ?
+                existingStudent.getSchoolClass().getSchoolClassId() : null;
+        if (oldClassId != null && newClassId != null && !oldClassId.equals(newClassId)) {
+            eventPublisher.publishEvent(new StudentUpdatedEvent(
+                    id,
+                    oldClassId,
+                    newClassId,
+                    savedStudent.getUser().getUserName().getFullName(), true
+
+            ));
+        }
+        return savedStudent;
     }
 
     /**
@@ -119,6 +150,18 @@ public class StudentService {
         if (!studentRepository.existsByStudentId(id)) {
             throw new EntityNotFoundException("Student not found with id " + id);
         }
+
+        Student student = studentRepository.findByStudentId(id)
+                .orElseThrow(() -> new EntityNotFoundException("Student not found"));
+
+        Long classId = student.getSchoolClass() != null ? student.getSchoolClass().getSchoolClassId() : null;
+        String className = student.getSchoolClass() != null ? student.getSchoolClass().getName() : "N/A";
+        eventPublisher.publishEvent(new StudentDeletedEvent(
+                id,
+                student.getUser().getUserName().getFullName(),
+                classId,
+                className
+        ));
         studentRepository.deleteByStudentId(id);
     }
 
