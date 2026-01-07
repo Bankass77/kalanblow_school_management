@@ -32,7 +32,7 @@ public class ChefEtablissement implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long chefEtablissementId;
 
-    @Value("${school.instance.id}")
+    @Value("${app.school.instance.id}")
     private String currentInstanceId;
 
     @Embedded

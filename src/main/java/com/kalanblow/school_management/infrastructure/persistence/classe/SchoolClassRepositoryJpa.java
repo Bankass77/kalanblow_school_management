@@ -75,4 +75,16 @@ public class SchoolClassRepositoryJpa implements SchoolClassRepository {
     public Page<SchoolClass> search(Specification<SchoolClass> specification, Pageable pageable) {
         return classRepository.findAll(specification,pageable);
     }
+
+    @Override
+    public Integer sumAllCapacities() {
+        return classRepository.sumAllCapacities();
+    }
+
+    @Override
+    public List<Object[]> getClassStatistics() {
+        return classRepository.getClassStatistics();
+    }
+
+
 }

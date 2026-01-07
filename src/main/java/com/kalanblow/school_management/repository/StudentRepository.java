@@ -21,4 +21,8 @@ public interface StudentRepository {
 
     boolean existsByIneNumber(String ineNumber);
     List<Student> findByClassId(String classId);
+
+    Long count();
+
+    Long countBySchoolClass(Object cls);
 }

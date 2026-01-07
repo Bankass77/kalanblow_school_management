@@ -53,4 +53,14 @@ public class StudentRepositoryJpa implements StudentRepository {
     public List<Student> findByClassId(String classId) {
         return List.of();
     }
+
+    @Override
+    public Long count() {
+        return (long) jpaStudentRepository.findAll().size();
+    }
+
+    @Override
+    public Long countBySchoolClass(Object cls) {
+        return 0L;
+    }
 }
