@@ -1,6 +1,6 @@
 package com.kalanblow.school_management.model;
 
-import com.kalanblow.school_management.model.enums.Role;
+import com.kalanblow.school_management.model.shared.enums.Role;
 import jakarta.persistence.*;
 
 import java.io.Serializable;

@@ -1,6 +1,10 @@
 package com.kalanblow.school_management.service;
 
-import com.kalanblow.school_management.model.SchoolClass;
+import com.kalanblow.school_management.model.anneescolaire.AnneeScolaire;
+import com.kalanblow.school_management.model.classe.SchoolClass;
+import com.kalanblow.school_management.model.etablissement.Etablissement;
+import com.kalanblow.school_management.repository.AnneeScolaireRepository;
+import com.kalanblow.school_management.repository.EtablissementRepository;
 import com.kalanblow.school_management.repository.SchoolClassRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -15,28 +19,31 @@ import java.util.List;
 @Transactional
 public class SchoolClassService {
     private final SchoolClassRepository schoolClassRepository;
+    private final EtablissementRepository etablissementRepository;
+    private final AnneeScolaireRepository anneeScolaireRepository;
 
-    public SchoolClassService(SchoolClassRepository schoolClassRepository) {
+    public SchoolClassService(SchoolClassRepository schoolClassRepository, EtablissementRepository etablissementRepository, AnneeScolaireRepository anneeScolaireRepository) {
         this.schoolClassRepository = schoolClassRepository;
+        this.etablissementRepository = etablissementRepository;
+        this.anneeScolaireRepository = anneeScolaireRepository;
     }
 
     @Transactional(readOnly = true)
-   public SchoolClass findSchoolClassById(Long id) {
-        return schoolClassRepository.findSchoolClassById(id).orElseThrow(()-> new EntityNotFoundException(" School class not found with id " + id));
+    public SchoolClass findSchoolClassById(Long id) {
+        return schoolClassRepository.findSchoolClassById(id).orElseThrow(() -> new EntityNotFoundException(" School class not found with id " + id));
     }
 
     @Transactional(readOnly = true)
     public SchoolClass findSchoolClassByName(String name) {
-        return schoolClassRepository.findSchoolClassByName(name).orElseThrow(()-> new EntityNotFoundException(" School class not found with name " + name));
+        return schoolClassRepository.findSchoolClassByName(name).orElseThrow(() -> new EntityNotFoundException(" School class not found with name " + name));
     }
 
     public SchoolClass create(SchoolClass schoolClass) {
+        Etablissement etablissement = etablissementRepository.findById(schoolClass.getEtablissement().getEtablisementScolaireId()).orElseThrow(() -> new EntityNotFoundException("Établissement non trouvé"));
+        AnneeScolaire anneeScolaire = anneeScolaireRepository.findById(schoolClass.getAnneeScolaire().getAnneeScolaireId()).orElseThrow(() -> new EntityNotFoundException("Année scolaire non trouvée"));
+        schoolClass.setEtablissement(etablissement);
+        schoolClass.setAnneeScolaire(anneeScolaire);
         return schoolClassRepository.create(schoolClass);
-    }
-
-    @Transactional(readOnly = true)
-    public List<SchoolClass> findAllSchoolClasses() {
-        return schoolClassRepository.findAllSchoolClasses();
     }
 
     public boolean existSchoolClass(Long id) {
@@ -65,6 +72,7 @@ public class SchoolClassService {
     }
 
     public Page<SchoolClass> search(Specification<SchoolClass> specification, Pageable pageable) {
-        return schoolClassRepository.search(specification,pageable);
+        return schoolClassRepository.search(specification, pageable);
     }
+
 }

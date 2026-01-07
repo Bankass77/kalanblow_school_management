@@ -1,6 +1,6 @@
 package com.kalanblow.school_management.application.mapper;
 
-import com.kalanblow.school_management.application.dto.PageResponse;
+import com.kalanblow.school_management.application.dto.page.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

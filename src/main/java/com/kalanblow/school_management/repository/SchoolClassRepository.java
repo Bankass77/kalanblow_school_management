@@ -1,6 +1,6 @@
 package com.kalanblow.school_management.repository;
 
-import com.kalanblow.school_management.model.SchoolClass;
+import com.kalanblow.school_management.model.classe.SchoolClass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
