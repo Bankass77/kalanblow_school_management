@@ -1,4 +1,3 @@
-/*
 package com.kalanblow.school_management.infrastructure.web.controller;
 
 import com.kalanblow.school_management.application.dashboard.ContactInfo;
@@ -38,4 +37,3 @@ public class InstanceController {
         );
     }
 }
-*/
