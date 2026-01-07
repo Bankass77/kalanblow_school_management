@@ -72,7 +72,7 @@ public class Inscription implements Serializable {
 
     @PrePersist
     public void prePersist() {
-        this.instanceId = new InstanceInfo().getCurrentInstanceId();
+        this.instanceId = new InstanceInfo( instanceId, schoolClass.getName()).getCurrentInstanceId();
     }
 }
 
